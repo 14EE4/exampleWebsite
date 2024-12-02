@@ -3,80 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Viewer and Downloader</title>
+    <title>Image Gallery from GitHub</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        .image-container {
+        .gallery {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
         }
         .image-item {
             text-align: center;
         }
-        img {
+        .image-item img {
             width: 100%;
             height: auto;
-            max-width: 200px;
+            border-radius: 8px;
         }
         .download-btn {
-            display: block;
             margin-top: 10px;
             padding: 8px 15px;
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            text-align: center;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
         .download-btn:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Image Viewer and Downloader</h1>
-    <div class="image-container" id="imageContainer">
-        <!-- 이미지가 여기에 동적으로 추가될 예정 -->
-    </div>
+    <h1>Image Gallery from GitHub</h1>
+    <div id="gallery" class="gallery"></div>
 
     <script>
         const GITHUB_USERNAME = "14EE4"; // GitHub 사용자명
         const REPO_NAME = "exampleWebsite"; // GitHub 저장소 이름
         const IMAGE_FOLDER = "image"; // 저장소 내 이미지가 있는 폴더 이름
 
-        // GitHub API URL을 사용하여 저장소의 이미지 파일 목록을 가져오기
-        const getImagesFromRepo = async () => {
-            const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/${IMAGE_FOLDER}`;
+        // GitHub API 요청 URL (이미지가 있는 폴더를 조회)
+        const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${IMAGE_FOLDER}`;
+
+        async function loadImages() {
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
-                // 이미지 파일 목록 처리
-                const imageContainer = document.getElementById('imageContainer');
-                data.forEach(item => {
-                    if (item.type === 'file' && item.name.match(/\.(jpg|jpeg|png|gif)$/)) {
-                        const imgElement = document.createElement('div');
-                        imgElement.classList.add('image-item');
+                if (Array.isArray(data)) {
+                    const gallery = document.getElementById('gallery');
+                    gallery.innerHTML = '';
 
-                        const imageUrl = item.download_url;
-                        const imgTag = `<img src="${imageUrl}" alt="${item.name}">`;
-                        const downloadButton = `<a href="${imageUrl}" class="download-btn" download="${item.name}">Download</a>`;
+                    data.forEach(file => {
+                        if (file.type === 'file' && (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') || file.name.endsWith('.png'))) {
+                            const imageItem = document.createElement('div');
+                            imageItem.classList.add('image-item');
 
-                        imgElement.innerHTML = imgTag + downloadButton;
-                        imageContainer.appendChild(imgElement);
-                    }
-                });
+                            const imageElement = document.createElement('img');
+                            imageElement.src = file.download_url;
+                            imageElement.alt = file.name;
+
+                            const downloadButton = document.createElement('button');
+                            downloadButton.classList.add('download-btn');
+                            downloadButton.textContent = 'Download';
+                            downloadButton.onclick = () => {
+                                window.location.href = file.download_url;
+                            };
+
+                            imageItem.appendChild(imageElement);
+                            imageItem.appendChild(downloadButton);
+                            gallery.appendChild(imageItem);
+                        }
+                    });
+                } else {
+                    console.error("Invalid response from GitHub API");
+                }
             } catch (error) {
                 console.error("Error fetching images from GitHub:", error);
             }
-        };
+        }
 
-        // 페이지 로드 시 이미지를 가져옴
-        window.onload = getImagesFromRepo;
+        // 페이지 로드 시 이미지 불러오기
+        loadImages();
     </script>
 </body>
 </html>
