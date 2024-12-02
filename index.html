@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload and Grid Viewer</title>
+    <title>Image Upload to GitHub</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,78 +12,66 @@
         .upload-container {
             margin-bottom: 20px;
         }
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-        }
-        .grid-item {
-            position: relative;
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-        }
-        .grid-item img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
-        .download-button {
-            margin-top: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .download-button:hover {
-            background-color: #0056b3;
-        }
     </style>
 </head>
 <body>
-    <h1>Image Upload and Grid Viewer</h1>
+    <h1>Image Upload to GitHub</h1>
     <div class="upload-container">
-        <input type="file" id="imageUploader" multiple accept="image/*">
+        <input type="file" id="imageUploader" accept="image/*">
+        <button id="uploadButton">Upload to GitHub</button>
     </div>
-    <div class="grid-container" id="imageGrid"></div>
+    <div id="status"></div>
 
     <script>
+        const GITHUB_USERNAME = "your-username"; // GitHub 사용자명
+        const REPO_NAME = "your-repository"; // 업로드할 GitHub 저장소 이름
+        const ACCESS_TOKEN = "your-personal-access-token"; // GitHub Personal Access Token
+
         const imageUploader = document.getElementById('imageUploader');
-        const imageGrid = document.getElementById('imageGrid');
+        const uploadButton = document.getElementById('uploadButton');
+        const statusDiv = document.getElementById('status');
 
-        imageUploader.addEventListener('change', (event) => {
-            const files = event.target.files;
-            if (files.length === 0) return;
+        uploadButton.addEventListener('click', async () => {
+            const file = imageUploader.files[0];
+            if (!file) {
+                statusDiv.textContent = "Please select an image to upload.";
+                return;
+            }
 
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const imgSrc = e.target.result;
-                    const gridItem = document.createElement('div');
-                    gridItem.classList.add('grid-item');
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64Image = event.target.result.split(',')[1]; // Base64 인코딩된 이미지 데이터
+                const fileName = file.name;
 
-                    const imgElement = document.createElement('img');
-                    imgElement.src = imgSrc;
+                const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/images/${fileName}`;
+                const data = {
+                    message: `Upload ${fileName}`,
+                    content: base64Image,
+                };
 
-                    const downloadButton = document.createElement('button');
-                    downloadButton.textContent = 'Download';
-                    downloadButton.classList.add('download-button');
-                    downloadButton.addEventListener('click', () => {
-                        const a = document.createElement('a');
-                        a.href = imgSrc;
-                        a.download = file.name;
-                        a.click();
+                try {
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${ACCESS_TOKEN}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
                     });
 
-                    gridItem.appendChild(imgElement);
-                    gridItem.appendChild(downloadButton);
-                    imageGrid.appendChild(gridItem);
-                };
-                reader.readAsDataURL(file);
-            }
+                    if (response.ok) {
+                        const result = await response.json();
+                        statusDiv.innerHTML = `Image uploaded successfully! <a href="${result.content.html_url}" target="_blank">View on GitHub</a>`;
+                    } else {
+                        const error = await response.json();
+                        statusDiv.textContent = `Error: ${error.message}`;
+                    }
+                } catch (error) {
+                    statusDiv.textContent = `Error: ${error.message}`;
+                }
+            };
+
+            reader.readAsDataURL(file);
         });
     </script>
 </body>
