@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Grid Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .upload-container {
+            margin-bottom: 20px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .grid-item {
+            position: relative;
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        .grid-item img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .download-button {
+            margin-top: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .download-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Upload and Grid Viewer</h1>
+    <div class="upload-container">
+        <input type="file" id="imageUploader" multiple accept="image/*">
+    </div>
+    <div class="grid-container" id="imageGrid"></div>
+
+    <script>
+        const imageUploader = document.getElementById('imageUploader');
+        const imageGrid = document.getElementById('imageGrid');
+
+        imageUploader.addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imgSrc = e.target.result;
+                    const gridItem = document.createElement('div');
+                    gridItem.classList.add('grid-item');
+
+                    const imgElement = document.createElement('img');
+                    imgElement.src = imgSrc;
+
+                    const downloadButton = document.createElement('button');
+                    downloadButton.textContent = 'Download';
+                    downloadButton.classList.add('download-button');
+                    downloadButton.addEventListener('click', () => {
+                        const a = document.createElement('a');
+                        a.href = imgSrc;
+                        a.download = file.name;
+                        a.click();
+                    });
+
+                    gridItem.appendChild(imgElement);
+                    gridItem.appendChild(downloadButton);
+                    imageGrid.appendChild(gridItem);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
