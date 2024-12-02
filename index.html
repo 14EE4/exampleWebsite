@@ -61,13 +61,13 @@
                     gallery.innerHTML = '';
 
                     data.forEach(file => {
-                        if (file.type === 'file' && (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') || file.name.endsWith('.png'))) {
+                        if (file.type === 'file' && (file.name.endsWith('.jpg') || file.name.endsWith('.jpeg') || file.name.endsWith('.png') || file.name.endsWith('.webp'))) {
                             const imageItem = document.createElement('div');
                             imageItem.classList.add('image-item');
 
                             // GitHub에서 다운로드 URL을 통해 이미지를 표시
                             const imageElement = document.createElement('img');
-                            imageElement.src = file.download_url;
+                            imageElement.src = file.download_url; // download_url 사용
                             imageElement.alt = file.name;
 
                             const downloadButton = document.createElement('button');
